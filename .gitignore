@@ -1,0 +1,20 @@
+# Python-generated files
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+
+# Virtual environments
+.venv
+
+#env files
+*.env
+
+*.log
+
+# my own stuff
+*to-do.md
+weaviate_data/
+company_policy*/
