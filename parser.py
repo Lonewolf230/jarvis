@@ -53,6 +53,7 @@ class Parser():
             This function will parse the file and return a list of chunks of text.
             It will check the file type and call the appropriate parser.
         '''
+        file_name=file_name.lower()
         file_type = file_name.split('.')[-1]
         if file_type not in ALLOWED_FILE_TYPES:
             raise ValueError(f"File type {file_type} is not allowed. Allowed file types are {ALLOWED_FILE_TYPES}")

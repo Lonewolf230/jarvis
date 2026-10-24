@@ -5,6 +5,7 @@ build/
 dist/
 wheels/
 *.egg-info
+.DS_Store
 
 # Virtual environments
 .venv
@@ -18,3 +19,4 @@ wheels/
 *to-do.md
 weaviate_data/
 company_policy*/
+northstar*/
