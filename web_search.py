@@ -24,4 +24,3 @@ class WebSearch:
         return results
 
 search = WebSearch()
-search.search("Who is Lionel Messi?", k=2)

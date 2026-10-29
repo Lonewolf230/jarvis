@@ -19,12 +19,11 @@ def web_search(query:str,k:int=3)->list[dict[str,str]]:
 
 def search_documents(user_query:str)->list[dict[str,str]]:
     '''
+    This is something that searches Northstar works internal documents for relevant information for a user query.
     This function will use a basic RAG (Retrieval-Augmented Generation) approach to answer the user's query.
-    It will search the store for relevant information and then use the LLM to generate a response.
+    It will search the store for relevant information for a user query from our internal sources.
     
     '''
-    
-    
     store = Store()
     try:
         embedded_query = embedder.embed([user_query])[0]
