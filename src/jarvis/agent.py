@@ -1,8 +1,8 @@
 import json
 from rich.console import Console
 from rich.markdown import Markdown
-from llm_utils import client
-from tools import web_search, search_documents
+from jarvis.llm_utils import client
+from jarvis.tools.tools import web_search, search_documents
 
 MODEL = "gpt-5.6-luna"  # same as llm_utils
 

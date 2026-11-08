@@ -23,3 +23,25 @@ In a proper agentic system (since this is a study agent)
 - any changes to notes will require that note to be ** re-indexed ** 
 - we would also need to have context across questions (checkpointing and LTM and STM)
 - Human in the loop etc for sensitive actions
+
+
+## Architecture as of now
+
+<table>
+
+  <tr>
+    <td align="center"><strong>App's agent loop</strong></td>
+    <td align="center"><strong>Ingestion and embedding pipeline</strong></td>
+  </tr>
+
+  <tr>
+    <td width="50%">
+      <img src="docs/app.png" width="100%" />
+    </td>
+    <td width="50%">
+      <img src="docs/ingestion.png" width="100%" />
+    </td>
+
+  </tr>
+
+</table>

@@ -1,9 +1,9 @@
 '''
 Tools for the LLM to use from
 '''
-from web_search import search
-from store import Store
-from embedder import embedder
+from jarvis.utils.web_search import search
+from jarvis.utils.store import Store
+from jarvis.ingestion.embedder import embedder
 
 def web_search(query:str,k:int=3)->list[dict[str,str]]:
     '''
@@ -19,10 +19,8 @@ def web_search(query:str,k:int=3)->list[dict[str,str]]:
 
 def search_documents(user_query:str)->list[dict[str,str]]:
     '''
-    This is something that searches Northstar works internal documents for relevant information for a user query.
-    This function will use a basic RAG (Retrieval-Augmented Generation) approach to answer the user's query.
-    It will search the store for relevant information for a user query from our internal sources.
-    
+    Use this when you want to query the user's own knowledge base which consists of obsidian vault docs and general pdf, word 
+    files uploaded to this system every now and then. This might also contain stuff about user preferred answers since it is their notes
     '''
     store = Store()
     try:

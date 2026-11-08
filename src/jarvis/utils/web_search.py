@@ -1,5 +1,5 @@
 from tavily import TavilyClient
-from settings import settings
+from jarvis.settings import settings
 
 class WebSearch:
     def __init__(self):

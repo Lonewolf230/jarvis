@@ -1,10 +1,16 @@
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Literal
 
 from rich.markdown import Markdown
 from rich.console import Console
 
-from settings import settings
+from jarvis.ingestion.ingester import Ingester
+from jarvis.logger import setup_logger
+from jarvis.settings import settings
+from jarvis.utils.store import Store
+
+logger = setup_logger('obsidian')
 
 VAULT = Path(settings.VAULT_DIR, settings.VAULT_NAME).expanduser().resolve()
 
@@ -44,7 +50,29 @@ def write_note(name: str, content: str, mode: Literal["a", "r"] = "a") -> str:
     p.parent.mkdir(parents=True, exist_ok=True)
     with p.open("a" if mode == "a" else "w", encoding="utf-8") as f:
         f.write(content)
-    return f"mode {mode} done: {name}"
+    logger.info(f"mode {mode} done: {name}")
+    return f"mode {mode} done: {name};"
+
+def reindex(p: Path) -> str:
+    """
+    Re-indexes one note after a write. The note on disk is the source of truth,
+    so an indexing failure is reported but never undoes the write.
+    """
+    file_id = p.relative_to(VAULT).as_posix()
+    st = p.stat()
+    to_utc = lambda t: datetime.fromtimestamp(t, tz=timezone.utc)
+    store = None
+    try:
+        logger.info(f"Re-indexing file : {p}")
+        store = Store()
+        n = Ingester(store).reindex(file_id, p.read_bytes(), to_utc(getattr(st, "st_birthtime", st.st_mtime)), to_utc(st.st_mtime))
+        return f"indexed {n} chunks of {file_id}"
+    except Exception as e:
+        logger.error(f"Reindex of {file_id} failed: {e}")
+        return "note saved but indexing failed, so it is not searchable yet"
+    finally:
+        if store:
+            store.close()
 
 def render_markdown(content: str) -> None:
     """

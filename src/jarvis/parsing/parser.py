@@ -7,14 +7,14 @@ import io
 
 from docx import Document
 from pypdf import PdfReader
-
-from logger import setup_logger
+from jarvis.settings import settings
+from jarvis.logger import setup_logger
 
 logger=setup_logger('parser')
 
-ALLOWED_FILE_TYPES = ['pdf', 'txt', 'docx']
-CHUNK_SIZE = 500
-CHUNK_OVERLAP = 80
+ALLOWED_FILE_TYPES = settings.ALLOWED_FILE_TYPES
+CHUNK_SIZE = settings.CHUNK_SIZE
+CHUNK_OVERLAP = settings.CHUNK_OVERLAP
 
 
 def chunk_overlap(text:str, chunk_size:int=CHUNK_SIZE, chunk_overlap:int=CHUNK_OVERLAP)->list:
@@ -60,7 +60,7 @@ class Parser():
         
         if file_type == 'pdf':
             return self.parse_pdf(file_bytes)
-        elif file_type == 'txt':
+        elif file_type in ('txt', 'md'):
             return self.parse_txt(file_bytes)
         elif file_type == 'docx':
             return self.parse_docx(file_bytes)

@@ -1,5 +1,5 @@
 from openai import OpenAI
-from settings import settings
+from jarvis.settings import settings
 
 # reads OPENAI_API_KEY from the environment
 client = OpenAI(

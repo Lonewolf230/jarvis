@@ -1,7 +1,3 @@
-
-from rich.console import Console
-from rich.markdown import Markdown
-
 from langchain.tools import tool
 from langchain_openai import ChatOpenAI
 
@@ -10,14 +6,14 @@ from langgraph.graph import StateGraph,MessagesState,START
 from langgraph.prebuilt import ToolNode,tools_condition
 from langgraph.errors import GraphRecursionError
 
-from settings import settings
-from tools import web_search, search_documents
-from obsidian import write_note,read_note,list_notes
+from jarvis.settings import settings
+from jarvis.tools.tools import web_search, search_documents
+from jarvis.tools.obsidian import write_note,read_note,list_notes
 
 tools = [tool(web_search), tool(search_documents),tool(write_note),tool(read_note),tool(list_notes)] 
 MODEL = "gpt-5.6-luna"  # same as llm_utils
 
-INSTRUCTIONS = """You are Jarvis, NorthStar Works very own AI assistant.
+INSTRUCTIONS = """You are Jarvis, my very own AI assistant.
 
 Answers:
 - Cite every claim taken from a source: the document name for search_documents, the URL for web_search, the note path for read_note.
