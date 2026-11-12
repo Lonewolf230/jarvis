@@ -1,4 +1,5 @@
-from datetime import datetime
+from datetime import datetime, timezone
+from pathlib import Path
 
 from jarvis.ingestion.embedder import embedder,Embedder
 from jarvis.parsing.parser import parser,Parser
@@ -10,16 +11,16 @@ class Ingester():
         self.store = store
         self.embedder = embedder or Embedder()
         
-    def ingest(self,file_name:str):
+    def ingest(self,file_name:str)->int:
         '''
-            This function will ingest the file and store the chunks and their vectors into the weaviate database.
+            This function will ingest an uploaded file from disk. It is stored under file_id "uploads/<name>"
+            so it cannot collide with a vault note, and uploading the same name again replaces the old chunks.
             It will return the number of chunks ingested.
         '''
-        with open(file_name,'rb') as f:
-            file_bytes = f.read()
-        chunks = self.parser.parse(file_name,file_bytes)
-        vectors = self.embedder.embed(chunks)
-        return self.store.insert(chunks,vectors)
+        path = Path(file_name)
+        st = path.stat()
+        to_utc = lambda t: datetime.fromtimestamp(t, tz=timezone.utc)
+        return self.reindex(f"uploads/{path.name}", path.read_bytes(), to_utc(getattr(st, "st_birthtime", st.st_mtime)), to_utc(st.st_mtime))
 
     def reindex(self,file_id:str,file_bytes:bytes,created_at:datetime,updated_at:datetime)->int:
         '''
@@ -27,6 +28,6 @@ class Ingester():
             file_id is the vault-relative path. It will return the number of chunks stored.
         '''
         chunks = self.parser.parse(file_id,file_bytes)
-        vectors = self.embedder.embed(chunks) if chunks else []  # the embeddings API rejects empty input
+        vectors = self.embedder.embed([c.text for c in chunks]) if chunks else []  # the embeddings API rejects empty input
         return self.store.upsert_file(file_id,chunks,vectors,created_at,updated_at)
 

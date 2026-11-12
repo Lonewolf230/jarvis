@@ -21,6 +21,9 @@ def search_documents(user_query:str)->list[dict[str,str]]:
     '''
     Use this when you want to query the user's own knowledge base which consists of obsidian vault docs and general pdf, word 
     files uploaded to this system every now and then. This might also contain stuff about user preferred answers since it is their notes
+
+    Each result has text, file_id (a vault note path usable with read_note/write_note, or an uploaded file name),
+    page_no (pdf only, else None) and slice_start/slice_end (character offsets of the chunk in the file, or in its page when page_no is set).
     '''
     store = Store()
     try:

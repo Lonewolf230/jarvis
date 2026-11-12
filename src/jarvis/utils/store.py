@@ -31,29 +31,20 @@ class Store():
                     Property(name="file_id", data_type=DataType.TEXT, tokenization=Tokenization.FIELD),
                     Property(name="file_name", data_type=DataType.TEXT, tokenization=Tokenization.FIELD),
                     Property(name="chunk_index", data_type=DataType.INT),
+                    Property(name="slice_start", data_type=DataType.INT),
+                    Property(name="slice_end", data_type=DataType.INT),
+                    Property(name="page_no", data_type=DataType.INT),
                     Property(name="created_at", data_type=DataType.DATE),
                     Property(name="updated_at", data_type=DataType.DATE),
                 ],
             )
             logger.info(f"Collection {COLLECTION} created")
         self.collection = self.client.collections.get(COLLECTION)
-
-    def insert(self, chunks:list, vectors:list)->int:
-        '''
-            This function will insert the chunks and their vectors into the weaviate database.
-            It will return the number of chunks inserted.
-        '''
-        if len(chunks) != len(vectors):
-            logger.error("Chunks and vectors must be of the same length")
-            raise ValueError("Chunks and vectors must be of the same length")
-        logger.info(f"Inserting {len(chunks)} chunks into the database")
-        with self.collection.batch.dynamic() as batch:
-            for chunk, vector in zip(chunks, vectors, strict=True):
-                batch.add_object(properties={"text": chunk}, vector=vector)
-        if self.collection.batch.failed_objects:
-            logger.error(f"{len(self.collection.batch.failed_objects)} objects failed to insert")
-            raise RuntimeError(f"{len(self.collection.batch.failed_objects)} objects failed to insert")
-        return len(chunks)
+        # collections made before these properties existed need them added in place
+        existing = {p.name for p in self.collection.config.get().properties}
+        for name in ("slice_start", "slice_end", "page_no"):
+            if name not in existing:
+                self.collection.config.add_property(Property(name=name, data_type=DataType.INT))
 
     def upsert_file(self, file_id:str, chunks:list, vectors:list, created_at:datetime, updated_at:datetime)->int:
         '''
@@ -69,10 +60,14 @@ class Store():
             for i, (chunk, vector) in enumerate(zip(chunks, vectors)):
                 batch.add_object(
                     properties={
-                        "text": chunk,
+                        "text": chunk.text,
                         "file_id": file_id,
                         "file_name": Path(file_id).name,
                         "chunk_index": i,
+                        "slice_start": chunk.slice_start,
+                        "slice_end": chunk.slice_end,
+                        # weaviate stores no null: omit the key for non-paged files
+                        **({"page_no": chunk.page_no} if chunk.page_no is not None else {}),
                         "created_at": created_at,
                         "updated_at": updated_at,
                     },
@@ -97,10 +92,11 @@ class Store():
     def search(self, query:str, vector:list, k:int=5)->list:
         '''
             This function will do a hybrid search: vector similarity plus keyword match on the text.
-            It will return the k best matching chunks of text.
+            It will return the k best matching chunks as dicts: text, file_id, slice_start, slice_end, page_no.
         '''
         result = self.collection.query.hybrid(query=query, vector=vector, limit=k, query_properties=["text"])
-        return [obj.properties["text"] for obj in result.objects]
+        keys = ("text", "file_id", "slice_start", "slice_end", "page_no")
+        return [{k: obj.properties.get(k) for k in keys} for obj in result.objects]
 
     def close(self):
         self.client.close()

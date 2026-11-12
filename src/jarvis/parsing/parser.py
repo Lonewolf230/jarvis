@@ -4,6 +4,7 @@
 '''
 
 import io
+from dataclasses import dataclass
 
 from docx import Document
 from pypdf import PdfReader
@@ -17,7 +18,15 @@ CHUNK_SIZE = settings.CHUNK_SIZE
 CHUNK_OVERLAP = settings.CHUNK_OVERLAP
 
 
-def chunk_overlap(text:str, chunk_size:int=CHUNK_SIZE, chunk_overlap:int=CHUNK_OVERLAP)->list:
+@dataclass
+class Chunk:
+    text: str
+    slice_start: int  # char offsets into the source text; per page when page_no is set
+    slice_end: int
+    page_no: int | None = None  # 1-based, pdf only: python-docx cannot tell page breaks
+
+
+def chunk_overlap(text:str, chunk_size:int=CHUNK_SIZE, chunk_overlap:int=CHUNK_OVERLAP, page_no:int|None=None)->list[Chunk]:
     '''
     Splits the text into chunks of a specified size, with a specified overlap.
     Upgrade to this function to use a more advanced chunking algorithm that will split the text into chunks based on sentences and paragraphs.
@@ -36,7 +45,7 @@ def chunk_overlap(text:str, chunk_size:int=CHUNK_SIZE, chunk_overlap:int=CHUNK_O
     
     while start<len(text):
         end= min(start+chunk_size,len(text))
-        chunks.append(text[start:end])
+        chunks.append(Chunk(text[start:end], start, end, page_no))
         
         if end==len(text):
             break
@@ -48,7 +57,7 @@ def chunk_overlap(text:str, chunk_size:int=CHUNK_SIZE, chunk_overlap:int=CHUNK_O
 
 class Parser():
     
-    def parse(self,file_name:str,file_bytes:bytes)->list:
+    def parse(self,file_name:str,file_bytes:bytes)->list[Chunk]:
         '''
             This function will parse the file and return a list of chunks of text.
             It will check the file type and call the appropriate parser.
@@ -71,7 +80,9 @@ class Parser():
             It will use the pypdf library to read the pdf file.
         '''
         reader = PdfReader(io.BytesIO(file_bytes))
-        return chunk_overlap("\n".join(page.extract_text() or "" for page in reader.pages))
+        # chunks never cross a page, so every chunk has one page_no
+        return [c for i, page in enumerate(reader.pages, 1)
+                for c in chunk_overlap(page.extract_text() or "", page_no=i)]
 
     def parse_txt(self,file_bytes:bytes)->list:
         '''

@@ -20,10 +20,12 @@ the agent implemented atp is a very simple one and could be prone to mistakes.
 In a proper agentic system (since this is a study agent)
 
 - All our notes must be ingested along with whatever we upload to the agent
-- any changes to notes will require that note to be ** re-indexed ** 
+- ~~any changes to notes will require that note to be ** re-indexed **~~ 
 - we would also need to have context across questions (checkpointing and LTM and STM)
 - Human in the loop etc for sensitive actions
-
+- memory across chats and checkpointers etc
+- complex parsing
+- handling costs
 
 ## Architecture as of now
 
