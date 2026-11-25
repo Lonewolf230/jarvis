@@ -101,3 +101,4 @@ class Store():
     def close(self):
         self.client.close()
 
+store = Store()

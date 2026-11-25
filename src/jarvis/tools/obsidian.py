@@ -1,4 +1,5 @@
 import hashlib
+import re
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Literal
@@ -8,7 +9,9 @@ from rich.console import Console
 
 from jarvis.ingestion.ingester import Ingester
 from jarvis.logger import setup_logger
+from jarvis.guardrails import REDACTED
 from jarvis.settings import settings
+from jarvis.tools.tools import untrusted
 from jarvis.utils.store import Store
 
 logger = setup_logger('obsidian')
@@ -51,7 +54,8 @@ def read_note(name: str, start: int = 0, end: int | None = None) -> str:
     if len(text[start:end]) == len(text) <= 20_000:  # only a complete read counts, however end was spelled
         _read[p] = hashlib.sha256(text.encode("utf-8")).hexdigest()
     # shortcut: cut long reads at 20k chars, page through with start/end when notes get bigger
-    return text[start:end][:20_000]
+    # notes can hold clipped web text, so the model gets them tagged like any other untrusted input
+    return untrusted("note", text[start:end][:20_000], path=name)
 
 def write_note(name: str, content: str, mode: Literal["create", "append", "replace"]) -> str:
     """
@@ -70,8 +74,11 @@ def write_note(name: str, content: str, mode: Literal["create", "append", "repla
         p.parent.mkdir(parents=True, exist_ok=True)
     elif not p.exists():
         raise ValueError(f"{name} does not exist: use create (or check the path with list_notes)")
+    elif mode == "replace" and REDACTED in content:
+        raise ValueError(f"{name} was shown with secrets redacted, so replace would overwrite them with {REDACTED}. Use append instead.")
     elif mode == "replace" and _read.get(p) != _digest(p):
         raise ValueError(f"read all of {name} with read_note before replacing it (it was not read in full, or it changed since)")
+    content = re.sub(r"</?note\b[^>]*>\n?", "", content)  # read_note output is tagged; a model that copies it back must not save the tags
     with p.open("w" if mode in ("create", "replace") else "a", encoding="utf-8") as f:
         f.write(content)
     if mode != "append":

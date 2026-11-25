@@ -3,7 +3,7 @@ from jarvis.settings import settings
 
 # reads OPENAI_API_KEY from the environment
 client = OpenAI(
-    api_key=settings.OPENAI_API_KEY
+    api_key=settings.OPENAI_API_KEY.get_secret_value()
 )
 
 SYSTEM_PROMPT:str='''

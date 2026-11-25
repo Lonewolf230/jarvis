@@ -1,10 +1,13 @@
-from pydantic import Field
-from pydantic_settings import BaseSettings
+from pydantic import SecretStr
+from pydantic_settings import BaseSettings,SettingsConfigDict
 
 class Settings(BaseSettings):
-    OPENAI_API_KEY: str = Field(..., env="OPENAI_API_KEY")
-    LOCALSTACK_API_KEY: str = Field(..., env="LOCALSTACK_API_KEY")
-    TAVILY_API_KEY: str = Field(..., env="TAVILY_API_KEY")
+    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
+
+    OPENAI_API_KEY: SecretStr 
+    LOCALSTACK_API_KEY: SecretStr 
+    TAVILY_API_KEY: SecretStr 
+    POSTGRES_DB_URI: SecretStr
     VAULT_DIR: str = '/Users/manish/Manish Docs/Obsidian'
     VAULT_NAME: str = 'JarvisNotes'
     EMBEDDING_MODEL: str = 'text-embedding-3-small'
@@ -13,8 +16,5 @@ class Settings(BaseSettings):
     CHUNK_SIZE : int = 500
     COLLECTION : str = "Notes"
 
-    class Config:
-        env_file = ".env"
-        env_file_encoding = "utf-8"
         
 settings = Settings()

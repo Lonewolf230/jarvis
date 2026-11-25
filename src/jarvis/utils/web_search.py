@@ -4,14 +4,14 @@ from jarvis.settings import settings
 class WebSearch:
     def __init__(self):
         self.client = TavilyClient(
-            api_key=settings.TAVILY_API_KEY,
+            api_key=settings.TAVILY_API_KEY.get_secret_value(),
         )
     
     def search(self, query:str, k:int=2)->list[dict[str,str]]:
         '''
             This function will search the web for the query and return the k best matching chunks of text.
         '''
-        response = self.client.search(query=query, max_results=k,include_raw_content=True)
+        response = self.client.search(query=query, max_results=k)
         results=[]
         
         for result in response["results"]:
